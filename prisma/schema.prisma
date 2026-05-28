@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Instalacoes{
+  id Int @id @default(autoincrement())
+  id_cliente Int
+  clientes Clientes @relation(fields: [id_cliente], references: [id], onDelete: Cascade)
+  id_cyber Int
+  cyber Cyberwares @relation(fields: [id_cyber], references: [id], onDelete: Cascade)
+  data DateTime @default(now())
+}
+
+model Clientes{
+  id Int @id @default(autoincrement())
+  nome String 
+  email String @unique
+  saldo Decimal 
+  instalacoes Instalacoes[]
+}
+
+model Cyberwares{
+  id Int @id @default(autoincrement())
+  nome String 
+  preco    Decimal
+  estoque  Int
+  intalacoes Instalacoes[]
+  id_categoria Int
+  categoria Categoria @relation(fields: [id_categoria], references: [id])
+}
+
+model Categoria {
+  id Int @id @default(autoincrement())
+  nome String @unique
+  cyberware Cyberwares[] 
+}
+
+model HistoricoVendas {
+  id                Int      @id @default(autoincrement())
+  data_procedimento DateTime @default(now())
+  nome_cliente      String   
+  email_cliente     String   
+  nome_cyberware    String   
+  valor_pago        Decimal  @db.Decimal(10, 2)
+  @@map("historico_vendas") 
+}

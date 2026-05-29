@@ -28,7 +28,7 @@ model Cyberwares{
   id Int @id @default(autoincrement())
   nome String 
   preco    Decimal
-  estoque  Int
+  estoque  String
   intalacoes Instalacoes[]
   id_categoria Int
   categoria Categoria @relation(fields: [id_categoria], references: [id])

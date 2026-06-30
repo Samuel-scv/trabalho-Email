@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ListarLogs, BuscarLogsPorCliente } from "../controllers/logs.controllers.js";
-import { Authmiddleware } from "../../auth.middlewares.js"
-import { AdminMiddleware } from "../../authAdmin.middlewares.js"
+import { Authmiddleware } from "../middlewares/auth.middleswares.js" 
+import { AdminMiddleware } from "../middlewares/authAdmin.middlewares.js" 
 
 const router = Router();
 

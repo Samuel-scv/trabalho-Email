@@ -1,6 +1,6 @@
 import { Router } from "express"
 import { CriarInstalacao, ListarInstalacoes, DeletarInstalacao, EnviarRelatorio } from "../controllers/instalacoes.controllers.js"
-import { Authmiddleware } from "../../auth.middlewares.js" // Importe o seu middleware
+import { Authmiddleware } from "../middlewares/auth.middleswares.js" 
 
 const router = Router()
  

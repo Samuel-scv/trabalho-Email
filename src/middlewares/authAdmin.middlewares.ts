@@ -1,11 +1,19 @@
 import type { Response, NextFunction } from 'express'
 import type { AuthRequest } from './auth.middleswares.js'
+import { prisma } from '../../lib/prisma.js'
 
-export function AdminMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-    // CORREÇÃO: Verificar usando a string exata do seu enum (maiúsculo)
+export async function AdminMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
     if (req.tipo !== "ADMIN") {
+        await prisma.log.create({
+            data: {
+                descricao: "Tentativa de acesso negado",
+                complemento: `Usuário sem permissão de administrador tentou acessar ${req.method} ${req.originalUrl}.`,
+                clienteId: req.userId ?? null
+            }
+        })
+
         res.status(403).json({ error: "Acesso negado. Você não é admin." })
-        return // CORREÇÃO: Faltava o return aqui para parar a execução
+        return 
     }
     next()
 }

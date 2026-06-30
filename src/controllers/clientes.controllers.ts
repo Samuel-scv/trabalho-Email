@@ -3,6 +3,7 @@ import type { AuthRequest } from "../middlewares/auth.middleswares.js"
 import type { cliente } from "../interface/cliente.interfaces.js"
 import { prisma } from "../../lib/prisma.js"
 import { enviarEmailRecuperacao } from "../email/email.js"
+import bcrypt from "bcryptjs"
 
 function gerarCodigoRecuperacao(): string {
     const caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -14,10 +15,13 @@ function gerarCodigoRecuperacao(): string {
 }
 
 function senhaValida(senha: string): boolean {
-    // mínimo 8 caracteres, pelo menos 1 letra maiúscula, 1 minúscula e 1 número
-    const regexSenha = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
+    // mínimo 8 caracteres, pelo menos 1 letra maiúscula, 1 minúscula, 1 número e 1 símbolo
+    const regexSenha = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
     return regexSenha.test(senha)
 }
+
+const MENSAGEM_SENHA_INVALIDA =
+    "a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula, número e símbolo (ex: !@#$%)"
 
 
 export async function CriarCliente(req: Request, res: Response) {
@@ -34,17 +38,33 @@ export async function CriarCliente(req: Request, res: Response) {
     }
 
     if (!senhaValida(senha)) {
-        res.status(400).json({
-            error: "a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula e número"
-        })
+        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
+        return
+    }
+
+    // Impede o cadastro de 2 usuários com o mesmo e-mail, com mensagem indicativa
+    const emailJaCadastrado = await prisma.clientes.findUnique({ where: { email } })
+    if (emailJaCadastrado) {
+        res.status(409).json({ error: "já existe um usuário cadastrado com esse e-mail" })
         return
     }
 
     try {
+        const senhaCriptografada = await bcrypt.hash(senha, 10)
+
         const novoCliente = await prisma.clientes.create({
-            data: { nome, email, senha, saldo, tipo },
+            data: { nome, email, senha: senhaCriptografada, saldo, tipo },
             select: { id: true }
         })
+
+        await prisma.log.create({
+            data: {
+                descricao: "Cadastro de cliente",
+                complemento: `Novo cliente cadastrado: ${nome} (${email}), tipo ${tipo}.`,
+                clienteId: novoCliente.id
+            }
+        })
+
         res.status(200).json(novoCliente)
     } catch {
         res.status(400).json({ error: "erro ao criar cliente" })
@@ -205,9 +225,7 @@ export async function RedefinirSenha(req: Request, res: Response) {
     }
 
     if (!senhaValida(novaSenha)) {
-        res.status(400).json({
-            error: "a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula e número"
-        })
+        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
         return
     }
 
@@ -224,11 +242,21 @@ export async function RedefinirSenha(req: Request, res: Response) {
     }
 
     try {
+        const senhaCriptografada = await bcrypt.hash(novaSenha, 10)
+
         await prisma.clientes.update({
             where: { email },
             data: {
-                senha: novaSenha,
+                senha: senhaCriptografada,
                 codigoRecuperacao: null
+            }
+        })
+
+        await prisma.log.create({
+            data: {
+                descricao: "Senha redefinida",
+                complemento: `Usuário ${cliente.nome} redefiniu a senha através da recuperação por e-mail.`,
+                clienteId: cliente.id
             }
         })
 

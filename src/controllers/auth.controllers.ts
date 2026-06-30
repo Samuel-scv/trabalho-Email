@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 export async function login(req: Request, res: Response) {
     const { email, senha } = req.body;
@@ -13,8 +14,11 @@ export async function login(req: Request, res: Response) {
     // Buscando na tabela correta do seu sistema (clientes)
     const user = await prisma.clientes.findUnique({ where: { email } });
 
+    // Compara a senha informada com o hash salvo no banco
+    const senhaCorreta = user ? await bcrypt.compare(senha, user.senha) : false;
+
     // REQUISITO 2: Tentativa de login inválida (Usuário não existe OU senha errada)
-    if (!user || (user.senha !== senha)) {
+    if (!user || !senhaCorreta) {
         
         // SALVANDO O LOG DE TENTATIVA INVÁLIDA
         await prisma.log.create({

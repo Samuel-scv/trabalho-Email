@@ -16,12 +16,21 @@ model Instalacoes{
   data DateTime @default(now())
 }
 
-model Clientes{
-  id Int @id @default(autoincrement())
-  nome String 
-  email String @unique
-  saldo Decimal 
-  instalacoes Instalacoes[]
+enum Tipo {
+  CLIENTE
+  ADMIN
+}
+
+model Clientes {
+  id                Int           @id @default(autoincrement())
+  nome              String 
+  email             String        @unique
+  senha             String        
+  tipo              Tipo          @default(CLIENTE)
+  saldo             Decimal 
+  codigoRecuperacao String?       @db.VarChar(4)    
+  instalacoes       Instalacoes[]
+  logs              Log[]         
 }
 
 model Cyberwares{
@@ -48,4 +57,15 @@ model HistoricoVendas {
   nome_cyberware    String   
   valor_pago        Decimal  @db.Decimal(10, 2)
   @@map("historico_vendas") 
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  descricao   String
+  complemento String?
+  createdAt   DateTime @default(now())
+  clienteId   Int?      
+  cliente     Clientes? @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  
+  @@map("logs")
 }

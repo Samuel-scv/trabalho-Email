@@ -28,6 +28,13 @@ export async function CriarInstalacao(req: Request, res: Response) {
     }
  
     if (Number(cliente.saldo) < Number(cyber.preco)) {
+        await prisma.log.create({
+            data: {
+                descricao: "Tentativa de instalação falhou",
+                complemento: "Motivo: Saldo insuficiente",
+                clienteId: cliente.id
+            }
+        });
         res.status(400).json({ error: "saldo insuficiente" })
         return
     }
@@ -71,6 +78,14 @@ export async function CriarInstalacao(req: Request, res: Response) {
                     email_cliente: cliente.email,
                     nome_cyberware: cyber.nome,
                     valor_pago: cyber.preco
+                }
+            })
+
+            await tx.log.create({
+                data: {
+                    descricao: "Instalação de Cyberware",
+                    complemento: `Cyberware instalado: ${cyber.nome}`,
+                    clienteId: cliente.id
                 }
             })
  
@@ -159,6 +174,14 @@ export async function DeletarInstalacao(req: Request, res: Response) {
             await tx.cyberwares.update({
                 where: { id: instalacao.id_cyber },
                 data: { estoque: String(Number(instalacao.cyber.estoque) + 1) }
+            })
+
+            await tx.log.create({
+                data: {
+                    descricao: "Exclusão de Instalação",
+                    complemento: `Instalação do cyberware ID: ${instalacao.id_cyber} estornada`,
+                    clienteId: instalacao.id_cliente
+                }
             })
         })
  

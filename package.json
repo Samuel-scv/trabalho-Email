@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "prisma": {
+    "seed": "npx tsx prisma/seeds/clientes.seeds.ts && npx tsx prisma/seeds/categoria.seeds.ts && npx tsx prisma/seeds/cyberwares.seeds.ts"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx tsx watch src/server.ts"
@@ -21,6 +24,7 @@
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@types/jsonwebtoken": "^9.0.10",
     "dotenv": "^17.4.2",

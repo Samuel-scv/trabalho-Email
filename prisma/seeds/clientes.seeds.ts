@@ -1,8 +1,4 @@
-import { PrismaClient } from '../../generated/prisma/client.js'
-import { PrismaPg } from '@prisma/adapter-pg'
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+import { prisma } from "../../lib/prisma.js"
 
 async function main() {
 
@@ -11,7 +7,7 @@ async function main() {
             {
                 nome: "Administrador do Sistema",
                 email: "admin@cyberware.com",
-                senha: "admin", // Como ainda não está a encriptar as senhas, mantemos em texto
+                senha: "admin",
                 tipo: "ADMIN",
                 saldo: 999999.99
             },

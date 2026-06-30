@@ -1,12 +1,7 @@
-import { PrismaClient } from '../../generated/prisma/client.js'
-import { PrismaPg } from '@prisma/adapter-pg'
+import { prisma } from "../../lib/prisma.js"
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
 
 async function main() {
-    // Lembre-se que o id_categoria precisa de corresponder aos IDs criados no seed anterior.
-    // Assumindo que a categoria "Ótico" ficou com ID 1 e "Braços" com ID 4
     await prisma.cyberwares.createMany({
         data: [
             {

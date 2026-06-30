@@ -4,8 +4,8 @@
   "main": "index.js",
   "type": "module",
   "prisma": {
-    "seed": "npx tsx prisma/seeds/clientes.seeds.ts && npx tsx prisma/seeds/categoria.seeds.ts && npx tsx prisma/seeds/cyberwares.seeds.ts"
-  },
+  "seed": "npx tsx prisma/seeds/clientes.seeds.ts && npx tsx prisma/seeds/categoria.seeds.ts && npx tsx prisma/seeds/cyberwares.seeds.ts"
+},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx tsx watch src/server.ts"

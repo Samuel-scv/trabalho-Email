@@ -20,7 +20,7 @@ export function Authmiddleware(req: AuthRequest, res: Response, next: NextFuncti
     const token = authHeader.split(" ")[1]!
 
     try {
-        const validateToken = jwt.verify(token, "algo") as JwtPayload
+        const validateToken = jwt.verify(token, process.env.TOKEN as string) as JwtPayload
         
         req.userId = validateToken.userId
         req.tipo = validateToken.tipo

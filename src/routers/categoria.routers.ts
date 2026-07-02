@@ -1,12 +1,12 @@
 import { Router } from "express"
-import { CriarCliente, ListarClientes, BuscarCliente, AtualizarCliente, DeletarCliente } from "../controllers/clientes.controllers.js"
+import { CriarCategoria, ListarCategorias, BuscarCategoria, AtualizarCategoria, DeletarCategoria } from "../controllers/categoria.controllers.js"
 
 const router = Router()
 
-router.post("/", CriarCliente)
-router.get("/", ListarClientes)
-router.get("/:id", BuscarCliente)
-router.patch("/:id", AtualizarCliente)
-router.delete("/:id", DeletarCliente)
+router.post("/", CriarCategoria)
+router.get("/", ListarCategorias)
+router.get("/:id", BuscarCategoria)
+router.patch("/:id", AtualizarCategoria)
+router.delete("/:id", DeletarCategoria)
 
 export default router

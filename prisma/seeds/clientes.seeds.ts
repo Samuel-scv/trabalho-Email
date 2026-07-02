@@ -26,7 +26,7 @@ async function main() {
                 saldo: 12500.50
             }
         ],
-        skipDuplicates: true, // Evita erros se tentar rodar o seed mais de uma vez
+        skipDuplicates: true,
     })
 
     console.log("✔️ Clientes e Admin inseridos com sucesso!")

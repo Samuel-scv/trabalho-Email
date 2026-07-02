@@ -28,7 +28,8 @@ model Clientes {
   senha             String        
   tipo              Tipo          @default(CLIENTE)
   saldo             Decimal 
-  codigoRecuperacao String?       @db.VarChar(4)    
+  codigoRecuperacao String?       @db.VarChar(4)
+  ultimoLogin       DateTime?
   instalacoes       Instalacoes[]
   logs              Log[]         
 }

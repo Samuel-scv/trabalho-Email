@@ -1,5 +1,5 @@
 import express from "express"
-import "dotenv/config"
+import authRouter from "./routers/auth.routers.js"
 import categoriaRouter from "./routers/categoria.routers.js"
 import clienteRouter from "./routers/clientes.routers.js"
 import cyberwareRouter from "./routers/cyberwares.routers.js"
@@ -11,6 +11,7 @@ const app = express()
  
 app.use(express.json())
  
+app.use("/auth", authRouter)
 app.use("/categoria", categoriaRouter)
 app.use("/clientes", clienteRouter)
 app.use("/cyberwares", cyberwareRouter)

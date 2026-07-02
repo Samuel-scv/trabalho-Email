@@ -8,16 +8,13 @@ export async function login(req: Request, res: Response) {
 
     if (!email || !senha) {
         res.status(400).json({ error: "email e senha são obrigatórios" });
-        return; // <-- CORREÇÃO: Adicionado o return para parar a execução
+        return;
     }
 
-    // Buscando na tabela correta do seu sistema (clientes)
     const user = await prisma.clientes.findUnique({ where: { email } });
 
-    // Compara a senha informada com o hash salvo no banco
     const senhaCorreta = user ? await bcrypt.compare(senha, user.senha) : false;
 
-    // REQUISITO 2: Tentativa de login inválida (Usuário não existe OU senha errada)
     if (!user || !senhaCorreta) {
         
         // SALVANDO O LOG DE TENTATIVA INVÁLIDA
@@ -25,7 +22,7 @@ export async function login(req: Request, res: Response) {
             data: {
                 descricao: "Tentativa de login inválida",
                 complemento: `Tentativa com o email: ${email}`,
-                clienteId: user ? user.id : null // Se o usuário não existir, grava como nulo
+                clienteId: user ? user.id : null 
             }
         });
 
@@ -33,7 +30,6 @@ export async function login(req: Request, res: Response) {
         return;
     }
 
-    // REQUISITO 2: Login realizado com sucesso
     await prisma.log.create({
         data: {
             descricao: "Login realizado com sucesso",
@@ -42,15 +38,23 @@ export async function login(req: Request, res: Response) {
         }
     });
 
-    // Geração do Token
+    const mensagemBoasVindas = user.ultimoLogin
+        ? `Bem-vindo, ${user.nome}! Seu último acesso ao sistema foi em ${user.ultimoLogin.toLocaleString("pt-BR")}.`
+        : `Bem-vindo, ${user.nome}! Este é o seu primeiro acesso ao sistema.`;
+
+    await prisma.clientes.update({
+        where: { id: user.id },
+        data: { ultimoLogin: new Date() }
+    });
+
     const token = jwt.sign(
         {
             userId: user.id,
             tipo: user.tipo
         },
-        "algo",
+        process.env.TOKEN as string,
         { expiresIn: "1h" }
     );
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, mensagem: mensagemBoasVindas });
 }

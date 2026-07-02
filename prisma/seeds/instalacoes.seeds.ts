@@ -1,8 +1,7 @@
 import { prisma } from "../../lib/prisma.js"
 
 async function main() {
-    // Busca os registros pelo nome/email em vez de assumir IDs fixos,
-    // assim o seed funciona independente da ordem em que os outros seeds rodaram.
+    
     const david = await prisma.clientes.findUnique({ where: { email: "david@edgerunners.com" } })
     const lucy = await prisma.clientes.findUnique({ where: { email: "lucy@netrunner.com" } })
 

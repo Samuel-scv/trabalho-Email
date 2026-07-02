@@ -1,13 +1,12 @@
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js";
 
-// Rota 3: Listagem de todos os logs com o nome do cliente (usuário)
 export async function ListarLogs(req: Request, res: Response) {
     try {
         const logs = await prisma.log.findMany({
             include: {
                 cliente: {
-                    select: { nome: true } // Exibição do nome do usuário
+                    select: { nome: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -18,7 +17,6 @@ export async function ListarLogs(req: Request, res: Response) {
     }
 }
 
-// Rota 4: Pesquisa dos logs filtrando a partir do id do cliente (usuário)
 export async function BuscarLogsPorCliente(req: Request, res: Response) {
     const { clienteId } = req.params;
 

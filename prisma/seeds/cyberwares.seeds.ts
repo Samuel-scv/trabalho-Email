@@ -6,21 +6,18 @@ async function main() {
         data: [
             {
                 nome: "Óticas Kiroshi Mk.3",
-                descricao: "Scanner de alto desempenho com zoom ótico.",
                 preco: 3500.00,
                 estoque: "15",
                 id_categoria: 1
             },
             {
                 nome: "Braços de Gorila",
-                descricao: "Aumenta drasticamente a força física.",
                 preco: 12000.00,
                 estoque: "5",
                 id_categoria: 4
             },
             {
                 nome: "Lâminas Louva-a-Deus",
-                descricao: "Lâminas letais retráteis nos antebraços.",
                 preco: 15500.00,
                 estoque: "3",
                 id_categoria: 4

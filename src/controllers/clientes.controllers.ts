@@ -15,13 +15,32 @@ function gerarCodigoRecuperacao(): string {
 }
 
 function senhaValida(senha: string): boolean {
-    // mínimo 8 caracteres, pelo menos 1 letra maiúscula, 1 minúscula, 1 número e 1 símbolo
     const regexSenha = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
     return regexSenha.test(senha)
 }
 
-const MENSAGEM_SENHA_INVALIDA =
-    "a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula, número e símbolo (ex: !@#$%)"
+const MENSAGEM_SENHA_INVALIDA ="a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula, número e símbolo (ex: !@#$%)"
+
+function contarDiferencas(a: string, b: string): number {
+    const linhas = a.length + 1
+    const colunas = b.length + 1
+    const dp: number[][] = Array.from({ length: linhas }, () => new Array(colunas).fill(0))
+
+    for (let i = 0; i < linhas; i++) dp[i]![0] = i
+    for (let j = 0; j < colunas; j++) dp[0]![j] = j
+
+    for (let i = 1; i < linhas; i++) {
+        for (let j = 1; j < colunas; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                dp[i]![j] = dp[i - 1]![j - 1]!
+            } else {
+                dp[i]![j] = 1 + Math.min(dp[i - 1]![j]!, dp[i]![j - 1]!, dp[i - 1]![j - 1]!)
+            }
+        }
+    }
+
+    return dp[linhas - 1]![colunas - 1]!
+}
 
 
 export async function CriarCliente(req: Request, res: Response) {
@@ -42,7 +61,6 @@ export async function CriarCliente(req: Request, res: Response) {
         return
     }
 
-    // Impede o cadastro de 2 usuários com o mesmo e-mail, com mensagem indicativa
     const emailJaCadastrado = await prisma.clientes.findUnique({ where: { email } })
     if (emailJaCadastrado) {
         res.status(409).json({ error: "já existe um usuário cadastrado com esse e-mail" })
@@ -263,5 +281,62 @@ export async function RedefinirSenha(req: Request, res: Response) {
         res.status(200).json({ message: "senha redefinida com sucesso" })
     } catch {
         res.status(500).json({ error: "erro ao redefinir senha" })
+    }
+}
+
+export async function AlterarSenha(req: AuthRequest, res: Response) {
+    const { senhaAtual, novaSenha } = req.body
+
+    if (!req.userId) {
+        res.status(401).json({ error: "usuário não autenticado" })
+        return
+    }
+
+    if (!senhaAtual || !novaSenha) {
+        res.status(400).json({ error: "senha atual e nova senha são obrigatórias" })
+        return
+    }
+
+    const cliente = await prisma.clientes.findUnique({ where: { id: req.userId } })
+    if (!cliente) {
+        res.status(404).json({ error: "cliente não encontrado" })
+        return
+    }
+
+    const senhaAtualCorreta = await bcrypt.compare(senhaAtual, cliente.senha)
+    if (!senhaAtualCorreta) {
+        res.status(400).json({ error: "senha atual incorreta" })
+        return
+    }
+
+    if (!senhaValida(novaSenha)) {
+        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
+        return
+    }
+
+    if (contarDiferencas(senhaAtual, novaSenha) < 2) {
+        res.status(400).json({ error: "a nova senha deve ter no mínimo 2 caracteres diferentes da senha atual" })
+        return
+    }
+
+    try {
+        const novaSenhaCriptografada = await bcrypt.hash(novaSenha, 10)
+
+        await prisma.clientes.update({
+            where: { id: req.userId },
+            data: { senha: novaSenhaCriptografada }
+        })
+
+        await prisma.log.create({
+            data: {
+                descricao: "Senha alterada",
+                complemento: `Usuário ${cliente.nome} alterou a própria senha.`,
+                clienteId: cliente.id
+            }
+        })
+
+        res.status(200).json({ message: "senha alterada com sucesso" })
+    } catch {
+        res.status(500).json({ error: "erro ao alterar senha" })
     }
 }

@@ -1,6 +1,5 @@
 import type { Request, Response } from "express"
 import type { AuthRequest } from "../middlewares/auth.middleswares.js"
-import type { cliente } from "../interface/cliente.interfaces.js"
 import { prisma } from "../../lib/prisma.js"
 import { enviarEmailRecuperacao } from "../email/email.js"
 import bcrypt from "bcryptjs"
@@ -13,13 +12,6 @@ function gerarCodigoRecuperacao(): string {
     }
     return codigo
 }
-
-function senhaValida(senha: string): boolean {
-    const regexSenha = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
-    return regexSenha.test(senha)
-}
-
-const MENSAGEM_SENHA_INVALIDA ="a senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, letra minúscula, número e símbolo (ex: !@#$%)"
 
 function contarDiferencas(a: string, b: string): number {
     const linhas = a.length + 1
@@ -42,24 +34,8 @@ function contarDiferencas(a: string, b: string): number {
     return dp[linhas - 1]![colunas - 1]!
 }
 
-
 export async function CriarCliente(req: Request, res: Response) {
-    const { nome, email, senha, saldo, tipo }: cliente = req.body
-
-    if (!nome || !email || !senha || saldo === undefined || !tipo) {
-        res.status(400).json({ error: "nome, email, senha, saldo e tipo são obrigatórios" })
-        return
-    }
-
-    if (tipo !== "CLIENTE" && tipo !== "ADMIN") {
-        res.status(400).json({ error: "tipo deve ser 'CLIENTE' ou 'ADMIN'" })
-        return
-    }
-
-    if (!senhaValida(senha)) {
-        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
-        return
-    }
+    const { nome, email, senha, saldo, tipo } = req.body
 
     const emailJaCadastrado = await prisma.clientes.findUnique({ where: { email } })
     if (emailJaCadastrado) {
@@ -146,11 +122,6 @@ export async function AtualizarCliente(req: Request, res: Response) {
 
     const { nome, email, saldo } = req.body
 
-    if (!nome || !email || !saldo) {
-        res.status(400).json({ error: "insira todos os dados" })
-        return
-    }
-
     const clienteExiste = await prisma.clientes.findUnique({ where: { id: Number(id) } })
     if (!clienteExiste) {
         res.status(404).json({ error: "cliente não encontrado" })
@@ -199,20 +170,12 @@ export async function DeletarCliente(req: AuthRequest, res: Response) {
     }
 }
 
-// Rota 1: solicitar recuperação de senha
-// Valida o e-mail, gera um código de 4 caracteres, salva no cliente e envia por e-mail
 export async function SolicitarRecuperacaoSenha(req: Request, res: Response) {
     const { email } = req.body
-
-    if (!email) {
-        res.status(400).json({ error: "email é obrigatório" })
-        return
-    }
 
     const cliente = await prisma.clientes.findUnique({ where: { email } })
 
     if (!cliente) {
-        // Não revela se o e-mail existe ou não, por segurança
         res.status(200).json({ message: "se o e-mail existir, um código de recuperação será enviado" })
         return
     }
@@ -233,19 +196,8 @@ export async function SolicitarRecuperacaoSenha(req: Request, res: Response) {
     }
 }
 
-// Rota 2: redefinir a senha a partir do e-mail, código recebido e nova senha
 export async function RedefinirSenha(req: Request, res: Response) {
     const { email, codigo, novaSenha } = req.body
-
-    if (!email || !codigo || !novaSenha) {
-        res.status(400).json({ error: "email, código e nova senha são obrigatórios" })
-        return
-    }
-
-    if (!senhaValida(novaSenha)) {
-        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
-        return
-    }
 
     const cliente = await prisma.clientes.findUnique({ where: { email } })
 
@@ -292,11 +244,6 @@ export async function AlterarSenha(req: AuthRequest, res: Response) {
         return
     }
 
-    if (!senhaAtual || !novaSenha) {
-        res.status(400).json({ error: "senha atual e nova senha são obrigatórias" })
-        return
-    }
-
     const cliente = await prisma.clientes.findUnique({ where: { id: req.userId } })
     if (!cliente) {
         res.status(404).json({ error: "cliente não encontrado" })
@@ -306,11 +253,6 @@ export async function AlterarSenha(req: AuthRequest, res: Response) {
     const senhaAtualCorreta = await bcrypt.compare(senhaAtual, cliente.senha)
     if (!senhaAtualCorreta) {
         res.status(400).json({ error: "senha atual incorreta" })
-        return
-    }
-
-    if (!senhaValida(novaSenha)) {
-        res.status(400).json({ error: MENSAGEM_SENHA_INVALIDA })
         return
     }
 

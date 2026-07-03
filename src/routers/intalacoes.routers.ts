@@ -3,10 +3,12 @@ import { CriarInstalacao, ListarInstalacoes, DeletarInstalacao, EnviarRelatorio 
 import { AdminMiddleware } from "../middlewares/authAdmin.middlewares.js"
 import { Authmiddleware } from "../middlewares/auth.middleswares.js"
 import { horarioPermitidoMiddleware } from "../middlewares/horario.middlewares.js"
+import { validarBody } from "../middlewares/Validation.middlewares.js"
+import { instalacaoSchema } from "../validators/schemas.js"
 
 const router = Router()
 
-router.post("/", Authmiddleware, AdminMiddleware, horarioPermitidoMiddleware(10, 22), CriarInstalacao)
+router.post("/", Authmiddleware, AdminMiddleware, horarioPermitidoMiddleware(10, 22), validarBody(instalacaoSchema), CriarInstalacao)
 router.get("/", Authmiddleware, AdminMiddleware, ListarInstalacoes)
 router.get("/relatorio/:id", Authmiddleware, AdminMiddleware, EnviarRelatorio)
 router.delete("/:id", Authmiddleware, AdminMiddleware, horarioPermitidoMiddleware(10, 22), DeletarInstalacao)

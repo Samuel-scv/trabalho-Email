@@ -6,23 +6,16 @@ import bcrypt from "bcryptjs";
 export async function login(req: Request, res: Response) {
     const { email, senha } = req.body;
 
-    if (!email || !senha) {
-        res.status(400).json({ error: "email e senha são obrigatórios" });
-        return;
-    }
-
     const user = await prisma.clientes.findUnique({ where: { email } });
 
     const senhaCorreta = user ? await bcrypt.compare(senha, user.senha) : false;
 
     if (!user || !senhaCorreta) {
-        
-        // SALVANDO O LOG DE TENTATIVA INVÁLIDA
         await prisma.log.create({
             data: {
                 descricao: "Tentativa de login inválida",
                 complemento: `Tentativa com o email: ${email}`,
-                clienteId: user ? user.id : null 
+                clienteId: user ? user.id : null
             }
         });
 

@@ -16,15 +16,17 @@ export const criarClienteSchema = z.object({
     nome: z.string().min(1, "nome é obrigatório"),
     email: z.string().email("email inválido"),
     senha: senhaSchema,
-    saldo: z.number({ error: "saldo é obrigatório" }),
-    tipo: z.enum(["CLIENTE", "ADMIN"], { error: "tipo deve ser 'CLIENTE' ou 'ADMIN'" })
+    saldo: z.number({ error: "saldo é obrigatório" })
+    // "tipo" não é aceito no cadastro público — evita que o próprio usuário
+    // se registre como ADMIN. O Prisma aplica o default CLIENTE.
+    // Promoção a ADMIN deve ser feita por uma rota separada, protegida por AdminMiddleware.
 })
 
 export const atualizarClienteSchema = z.object({
     nome: z.string().min(1, "nome é obrigatório"),
     email: z.string().email("email inválido"),
     saldo: z.number({ error: "saldo é obrigatório" })
-})
+}).partial()
 
 export const solicitarRecuperacaoSenhaSchema = z.object({
     email: z.string().email("email inválido")
@@ -48,9 +50,12 @@ export const categoriaSchema = z.object({
 export const cyberwareSchema = z.object({
     nome: z.string().min(1, "nome é obrigatório"),
     preco: z.number({ error: "preco é obrigatório" }).positive("preco deve ser positivo"),
-    estoque: z.string().min(1, "estoque é obrigatório"),
+    estoque: z.string().regex(/^\d+$/, "estoque deve ser um número inteiro não negativo"),
     id_categoria: z.number({ error: "id_categoria é obrigatório" })
 })
+
+// Usado no PATCH /:id — permite atualizar só os campos enviados
+export const atualizarCyberwareSchema = cyberwareSchema.partial()
 
 export const instalacaoSchema = z.object({
     id_cliente: z.number({ error: "id_cliente é obrigatório" }),
